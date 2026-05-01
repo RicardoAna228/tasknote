@@ -40,7 +40,7 @@ import java.util.*
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: TaskViewModel = viewModel()
+    viewModel: TaskViewModel
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()

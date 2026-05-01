@@ -57,7 +57,7 @@ import java.util.*
 @Composable
 fun TaskListScreen(
     navController: NavController,
-    viewModel: TaskViewModel = viewModel()
+    viewModel: TaskViewModel
 ) {
     val allTasks by viewModel.allTasks.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
@@ -263,7 +263,7 @@ fun ScrollableRow(
 fun TaskDetailScreen(
     navController: NavController,
     taskId: Int,
-    viewModel: TaskViewModel = viewModel()
+    viewModel: TaskViewModel
 ) {
     val allTasks by viewModel.allTasks.collectAsState()
     val task = allTasks.find { it.id == taskId }
@@ -580,7 +580,7 @@ fun SubtaskItem(
 @Composable
 fun NewTaskScreen(
     navController: NavController,
-    viewModel: TaskViewModel = viewModel()
+    viewModel: TaskViewModel
 ) {
     TaskFormScreen(
         navController = navController,
@@ -597,7 +597,7 @@ fun NewTaskScreen(
 fun EditTaskScreen(
     navController: NavController,
     taskId: Int,
-    viewModel: TaskViewModel = viewModel()
+    viewModel: TaskViewModel
 ) {
     val allTasks by viewModel.allTasks.collectAsState()
     val task = allTasks.find { it.id == taskId }

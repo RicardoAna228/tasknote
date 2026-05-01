@@ -19,6 +19,7 @@ import com.example.tasknote.ui.tasks.EditTaskScreen
 import com.example.tasknote.ui.tasks.NewTaskScreen
 import com.example.tasknote.ui.tasks.TaskDetailScreen
 import com.example.tasknote.ui.tasks.TaskListScreen
+import com.example.tasknote.viewmodel.TaskViewModel
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -44,6 +45,7 @@ sealed class Screen(val route: String) {
 fun TaskNoteNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    taskViewModel: TaskViewModel,                              // ← agregar
     startDestination: String = Screen.Login.route
 ) {
     NavHost(
@@ -56,16 +58,22 @@ fun TaskNoteNavHost(
         composable(Screen.ForgotPassword.route) { ForgotPasswordScreen(navController) }
         composable(Screen.ResetPassword.route) { ResetPasswordScreen(navController) }
 
-        composable(Screen.Home.route) { HomeScreen(navController) }
-        composable(Screen.TaskList.route) { TaskListScreen(navController) }
+        composable(Screen.Home.route) {
+            HomeScreen(navController, viewModel = taskViewModel)  // ← pasar
+        }
+        composable(Screen.TaskList.route) {
+            TaskListScreen(navController, viewModel = taskViewModel)  // ← pasar
+        }
         composable(Screen.TaskDetail.route) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull() ?: 0
-            TaskDetailScreen(navController, taskId)
+            TaskDetailScreen(navController, taskId, viewModel = taskViewModel)  // ← pasar
         }
-        composable(Screen.NewTask.route) { NewTaskScreen(navController) }
+        composable(Screen.NewTask.route) {
+            NewTaskScreen(navController, viewModel = taskViewModel)  // ← pasar
+        }
         composable(Screen.EditTask.route) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull() ?: 0
-            EditTaskScreen(navController, taskId)
+            EditTaskScreen(navController, taskId, viewModel = taskViewModel)  // ← pasar
         }
         composable(Screen.Projects.route) { ProjectsScreen(navController) }
         composable(Screen.Calendar.route) { CalendarScreen(navController) }
