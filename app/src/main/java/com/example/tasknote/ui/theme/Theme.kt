@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.activity.ComponentActivity
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
@@ -48,7 +49,8 @@ fun TaskNoteTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as androidx.activity.ComponentActivity).window
+            // val window = (view.context as androidx.activity.ComponentActivity).window
+            val window = (view.context as? ComponentActivity)?.window ?: return@SideEffect
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

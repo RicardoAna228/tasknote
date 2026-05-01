@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.core.view.WindowCompat
+//import androidx.core.view.WindowCompat
 import com.example.tasknote.navigation.TaskNoteNavHost
 import com.example.tasknote.ui.theme.TaskNoteTheme
 import com.example.tasknote.viewmodel.TaskViewModel
@@ -23,14 +23,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        // WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             TaskNoteTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TaskNoteNavHost(taskViewModel = taskViewModel) // ← único cambio
+                    // TaskNoteNavHost(taskViewModel = taskViewModel) // ← único cambio
+                    TaskNoteNavHost(
+                        modifier = Modifier.fillMaxSize(),
+                        taskViewModel = taskViewModel
+                    )
                 }
             }
         }
