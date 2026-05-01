@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -36,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tasknote.ui.theme.PriorityBaja
+import com.example.tasknote.data.local.UserPreferences
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -45,14 +48,25 @@ fun LoginScreen(navController: NavController) {
     var showError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val userPreferences = remember { UserPreferences(context) }
+    val coroutineScope = rememberCoroutineScope()
 
     fun validateAndLogin() {
         emailError = !email.contains("@") || email.isBlank()
-        passwordError = password.length < 6
+        passwordError = password.length < 8
         showError = emailError || passwordError
         if (!showError) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
+            coroutineScope.launch {
+                val (registeredEmail, registeredPassword) = userPreferences.getRegisteredUserCredentials()
+                val credentialsMatch = registeredEmail == email && registeredPassword == password
+
+                showError = !credentialsMatch
+                if (credentialsMatch) {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
             }
         }
     }
@@ -260,52 +274,6 @@ fun LoginScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Divisor
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Divider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
-                Text(
-                    text = "O CONTINÚA CON",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextDisabledLight,
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-                Divider(modifier = Modifier.weight(1f), color = Color.LightGray.copy(alpha = 0.5f))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Botón Google
-            OutlinedButton(
-                onClick = { /* Login con Google */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(46.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.5.dp,
-                    Color(0xFFE0E3EF)
-                )
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🇬", fontSize = 18.sp)
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Continuar con Google",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.weight(1f))
 
             Row(
@@ -344,6 +312,9 @@ fun RegisterScreen(navController: NavController) {
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
     var confirmError by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val userPreferences = remember { UserPreferences(context) }
+    val coroutineScope = rememberCoroutineScope()
 
     fun validateAndRegister() {
         nameError = name.isBlank()
@@ -351,8 +322,11 @@ fun RegisterScreen(navController: NavController) {
         passwordError = password.length < 8
         confirmError = password != confirmPassword
         if (!nameError && !emailError && !passwordError && !confirmError) {
-            navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
+            coroutineScope.launch {
+                userPreferences.saveRegisteredUser(email = email, password = password)
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
             }
         }
     }

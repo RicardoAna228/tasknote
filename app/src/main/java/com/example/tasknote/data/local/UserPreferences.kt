@@ -5,8 +5,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
@@ -16,6 +18,8 @@ class UserPreferences(private val context: Context) {
     companion object {
         val DARK_THEME_KEY = booleanPreferencesKey("dark_theme")
         val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
+        val REGISTERED_EMAIL_KEY = stringPreferencesKey("registered_email")
+        val REGISTERED_PASSWORD_KEY = stringPreferencesKey("registered_password")
     }
 
     val darkThemeFlow: Flow<Boolean> = context.dataStore.data
@@ -38,5 +42,17 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[NOTIFICATIONS_ENABLED_KEY] = enabled
         }
+    }
+
+    suspend fun saveRegisteredUser(email: String, password: String) {
+        context.dataStore.edit { preferences ->
+            preferences[REGISTERED_EMAIL_KEY] = email
+            preferences[REGISTERED_PASSWORD_KEY] = password
+        }
+    }
+
+    suspend fun getRegisteredUserCredentials(): Pair<String?, String?> {
+        val preferences = context.dataStore.data.map { it }.first()
+        return preferences[REGISTERED_EMAIL_KEY] to preferences[REGISTERED_PASSWORD_KEY]
     }
 }
