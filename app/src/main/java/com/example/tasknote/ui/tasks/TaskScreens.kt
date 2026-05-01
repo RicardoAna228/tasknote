@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,9 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.tasknote.data.local.entities.Category
 import com.example.tasknote.data.local.entities.Priority
@@ -53,7 +54,7 @@ import java.util.*
 // --------------------------------------------
 // Pantalla de Lista de Tareas
 // --------------------------------------------
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TaskListScreen(
     navController: NavController,
@@ -122,8 +123,8 @@ fun TaskListScreen(
 
             // Barra de búsqueda
             com.example.tasknote.ui.components.SearchBar(
-                query = "",
-                onQueryChange = { /* ... */ },
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -150,20 +151,20 @@ fun TaskListScreen(
                             )
                         },
                         leadingIcon = {
-                            Text(
-                                text = when (category) {
-                                    Category.TRABAJO -> "💼"
-                                    Category.PERSONAL -> "👤"
-                                    Category.COMPRAS -> "🛒"
-                                    Category.SALUD -> "💪"
-                                }
+                            Icon(
+                                imageVector = when (category) {
+                                    Category.TRABAJO -> Icons.Default.Work
+                                    Category.PERSONAL -> Icons.Default.Home
+                                    Category.COMPRAS -> Icons.Default.ShoppingCart
+                                    Category.SALUD -> Icons.Default.Favorite
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             if (filteredTasks.isEmpty()) {
                 EmptyState(
@@ -186,7 +187,10 @@ fun TaskListScreen(
                 ) {
                     if (pendingTasks.isNotEmpty()) {
                         item {
-                            SectionHeader(title = "Pendientes hoy")
+                            SectionHeader(
+                                title = "Pendientes hoy",
+                                topPadding = 0.dp
+                            )
                         }
                         items(pendingTasks) { task ->
                             TaskItem(
@@ -196,6 +200,12 @@ fun TaskListScreen(
                                 },
                                 onCheckChange = { completed ->
                                     viewModel.updateTask(task.copy(completed = completed))
+                                },
+                                onEditClick = {
+                                    navController.navigate(Screen.EditTask.createRoute(task.id))
+                                },
+                                onDeleteClick = {
+                                    viewModel.deleteTask(task)
                                 }
                             )
                             Divider(
@@ -232,25 +242,27 @@ fun TaskListScreen(
 }
 
 @Composable
-fun SectionHeader(title: String) {
+fun SectionHeader(title: String, topPadding: Dp = 0.dp) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+        modifier = Modifier.padding(top = topPadding, bottom = 8.dp)
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ScrollableRow(
     modifier: Modifier = Modifier,
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
-    content: @Composable RowScope.() -> Unit
+    content: @Composable FlowRowScope.() -> Unit
 ) {
-    Row(
+    FlowRow(
         modifier = modifier,
         horizontalArrangement = horizontalArrangement,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         content = content
     )
 }
@@ -258,7 +270,6 @@ fun ScrollableRow(
 // --------------------------------------------
 // Pantalla de Detalle de Tarea
 // --------------------------------------------
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
     navController: NavController,
@@ -971,30 +982,30 @@ fun RowScope.ProjectChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val (bgColor, textColor, borderColor, emoji) = when (category) {
-        Category.TRABAJO -> listOf(
-            CategoryTrabajo.copy(alpha = 0.1f),
-            CategoryTrabajo,
-            CategoryTrabajo.copy(alpha = 0.25f),
-            "💼"
+    val (bgColor, textColor, borderColor, icon) = when (category) {
+        Category.TRABAJO -> ProjectChipStyle(
+            bgColor = CategoryTrabajo.copy(alpha = 0.1f),
+            textColor = CategoryTrabajo,
+            borderColor = CategoryTrabajo.copy(alpha = 0.25f),
+            icon = Icons.Default.Work
         )
-        Category.PERSONAL -> listOf(
-            CategoryPersonal.copy(alpha = 0.1f),
-            CategoryPersonal,
-            CategoryPersonal.copy(alpha = 0.25f),
-            "👤"
+        Category.PERSONAL -> ProjectChipStyle(
+            bgColor = CategoryPersonal.copy(alpha = 0.1f),
+            textColor = CategoryPersonal,
+            borderColor = CategoryPersonal.copy(alpha = 0.25f),
+            icon = Icons.Default.Home
         )
-        Category.COMPRAS -> listOf(
-            CategoryCompras.copy(alpha = 0.1f),
-            CategoryCompras,
-            CategoryCompras.copy(alpha = 0.25f),
-            "🛒"
+        Category.COMPRAS -> ProjectChipStyle(
+            bgColor = CategoryCompras.copy(alpha = 0.1f),
+            textColor = CategoryCompras,
+            borderColor = CategoryCompras.copy(alpha = 0.25f),
+            icon = Icons.Default.ShoppingCart
         )
-        Category.SALUD -> listOf(
-            CategorySalud.copy(alpha = 0.1f),
-            CategorySalud,
-            CategorySalud.copy(alpha = 0.25f),
-            "💪"
+        Category.SALUD -> ProjectChipStyle(
+            bgColor = CategorySalud.copy(alpha = 0.1f),
+            textColor = CategorySalud,
+            borderColor = CategorySalud.copy(alpha = 0.25f),
+            icon = Icons.Default.Favorite
         )
     }
 
@@ -1003,8 +1014,8 @@ fun RowScope.ProjectChip(
             .weight(1f)
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
-        color = if (selected) (textColor as Color) else (bgColor as Color),
-        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.5.dp, borderColor as Color)
+        color = if (selected) textColor else bgColor,
+        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.5.dp, borderColor)
     ) {
         Row(
             modifier = Modifier
@@ -1013,15 +1024,27 @@ fun RowScope.ProjectChip(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(emoji as String, fontSize = 14.sp)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = if (selected) Color.White else textColor
+            )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = category.name.lowercase()
                     .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = if (selected) Color.White else (textColor as Color)
+                color = if (selected) Color.White else textColor
             )
         }
     }
 }
+
+private data class ProjectChipStyle(
+    val bgColor: Color,
+    val textColor: Color,
+    val borderColor: Color,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)

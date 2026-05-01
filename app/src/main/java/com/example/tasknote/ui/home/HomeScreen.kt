@@ -8,7 +8,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,9 +22,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.tasknote.data.local.UserPreferences
 import com.example.tasknote.data.local.entities.Category
@@ -78,12 +82,12 @@ fun HomeScreen(
     val upcomingTasks = allTasks.filter { !it.completed && (it.dueDate == null || it.dueDate > System.currentTimeMillis()) }
     val completedTasks = allTasks.count { it.completed }
 
-    // Proyectos con emojis
-    val categoryEmojis = mapOf(
-        Category.TRABAJO to "💼",
-        Category.PERSONAL to "👤",
-        Category.COMPRAS to "🛒",
-        Category.SALUD to "💪"
+    // Proyectos con iconos de Material (imagen vectorial)
+    val categoryIcons = mapOf(
+        Category.TRABAJO to Icons.Default.Work,
+        Category.PERSONAL to Icons.Default.Home,
+        Category.COMPRAS to Icons.Default.ShoppingCart,
+        Category.SALUD to Icons.Default.Favorite
     )
 
     Scaffold(
@@ -259,7 +263,7 @@ fun HomeScreen(
                     Category.values().forEach { category ->
                         CategoryChip(
                             category = category,
-                            emoji = categoryEmojis[category] ?: "📁",
+                            icon = categoryIcons[category] ?: Icons.Default.Work,
                             onClick = {
                                 // Filtrar tareas por categoría (navegar a Tasks con filtro)
                                 navController.navigate(Screen.TaskList.route)
@@ -344,6 +348,12 @@ fun HomeScreen(
                                     },
                                     onCheckChange = { checked ->
                                         viewModel.updateTask(task.copy(completed = checked))
+                                    },
+                                    onEditClick = {
+                                        navController.navigate(Screen.EditTask.createRoute(task.id))
+                                    },
+                                    onDeleteClick = {
+                                        viewModel.deleteTask(task)
                                     }
                                 )
                                 if (index < recentTasks.size - 1) {
@@ -401,7 +411,7 @@ private fun StatCard(
 @Composable
 private fun CategoryChip(
     category: Category,
-    emoji: String,
+    icon: ImageVector,
     onClick: () -> Unit
 ) {
     val (bgColor, textColor) = when (category) {
@@ -421,7 +431,12 @@ private fun CategoryChip(
                 .background(bgColor),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = emoji, fontSize = 24.sp)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = textColor,
+                modifier = Modifier.size(24.dp)
+            )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
