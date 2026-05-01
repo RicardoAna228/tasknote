@@ -55,7 +55,7 @@ fun ProfileScreen(
         topBar = {
             TaskNoteTopBar(
                 title = "Perfil",
-                onBackPressed = { navController.navigateUp() },
+                onBackPressed = { navController.popBackStack(Screen.Home.route, inclusive = false) },
                 actions = {
                     IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
                         BadgedBox(badge = { if (allTasks.isNotEmpty()) Badge() }) {
@@ -74,18 +74,25 @@ fun ProfileScreen(
                 onNavigate = { route ->
                     when (route) {
                         "home" -> navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Home.route) { inclusive = true }
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
                         }
                         "tasks" -> navController.navigate(Screen.TaskList.route) {
-                            popUpTo(Screen.TaskList.route) { inclusive = true }
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
                         }
                         "calendar" -> navController.navigate(Screen.Calendar.route) {
-                            popUpTo(Screen.Calendar.route) { inclusive = true }
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
                         }
                         "projects" -> navController.navigate(Screen.Projects.route) {
-                            popUpTo(Screen.Projects.route) { inclusive = true }
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
                         }
-                        "profile" -> { /* ya estamos */ }
+                        "profile" -> navController.navigate(Screen.Profile.route) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     }
                 }
             )

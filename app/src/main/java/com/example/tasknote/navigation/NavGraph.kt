@@ -75,9 +75,9 @@ fun TaskNoteNavHost(
             val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull() ?: 0
             EditTaskScreen(navController, taskId, viewModel = taskViewModel)  // ← pasar
         }
-        composable(Screen.Projects.route) { ProjectsScreen(navController) }
-        composable(Screen.Calendar.route) { CalendarScreen(navController) }
-        composable(Screen.Profile.route) { ProfileScreen(navController) }
+        composable(Screen.Projects.route) { ProjectsScreen(navController, viewModel = taskViewModel) }
+        composable(Screen.Calendar.route) { CalendarScreen(navController, viewModel = taskViewModel) }
+        composable(Screen.Profile.route) { ProfileScreen(navController, viewModel = taskViewModel) }
         composable(Screen.Notifications.route) { NotificationsScreen(navController) }
     }
 }

@@ -66,7 +66,7 @@ fun ProjectsScreen(
         topBar = {
             TaskNoteTopBar(
                 title = "Proyectos",
-                onBackPressed = { navController.navigateUp() },
+                onBackPressed = { navController.popBackStack(Screen.Home.route, inclusive = false) },
                 actions = {
                     IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
                         BadgedBox(badge = { if (true) Badge() }) {
@@ -81,11 +81,26 @@ fun ProjectsScreen(
                 currentRoute = Screen.Projects.route,
                 onNavigate = { route ->
                     when (route) {
-                        "home" -> navController.navigate(Screen.Home.route)
-                        "tasks" -> navController.navigate(Screen.TaskList.route)
-                        "calendar" -> navController.navigate(Screen.Calendar.route)
-                        "projects" -> { /* ya estamos */ }
-                        "profile" -> navController.navigate(Screen.Profile.route)
+                        "home" -> navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                        "tasks" -> navController.navigate(Screen.TaskList.route) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                        "calendar" -> navController.navigate(Screen.Calendar.route) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                        "projects" -> navController.navigate(Screen.Projects.route) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                        "profile" -> navController.navigate(Screen.Profile.route) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     }
                 }
             )
