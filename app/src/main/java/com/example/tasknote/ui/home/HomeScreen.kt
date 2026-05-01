@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.tasknote.data.local.UserPreferences
 import com.example.tasknote.data.local.entities.Category
 import com.example.tasknote.navigation.Screen
 import com.example.tasknote.ui.components.TaskItem
@@ -44,6 +45,11 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    val userPreferences = remember { UserPreferences(context) }
+    val userName by produceState(initialValue = "Usuario") {
+        value = userPreferences.getRegisteredUserName().orEmpty().ifBlank { "Usuario" }
+    }
 
     val allTasks by viewModel.allTasks.collectAsState()
     val allProjects by viewModel.allProjects.collectAsState()
@@ -122,7 +128,7 @@ fun HomeScreen(
                         .clickable { navController.navigate(Screen.Profile.route) },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("U", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(userName.firstOrNull()?.uppercase() ?: "U", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         },
@@ -164,7 +170,7 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Column {
                     Text(
-                        text = "Hola, Usuario 👋",
+                        userName,
                         style = MaterialTheme.typography.displayLarge,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onBackground

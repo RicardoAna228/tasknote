@@ -323,7 +323,7 @@ fun RegisterScreen(navController: NavController) {
         confirmError = password != confirmPassword
         if (!nameError && !emailError && !passwordError && !confirmError) {
             coroutineScope.launch {
-                userPreferences.saveRegisteredUser(email = email, password = password)
+                userPreferences.saveRegisteredUser(name = name.trim(), email = email, password = password)
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Login.route) { inclusive = true }
                 }

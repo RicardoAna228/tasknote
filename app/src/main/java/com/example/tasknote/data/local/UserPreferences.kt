@@ -18,6 +18,7 @@ class UserPreferences(private val context: Context) {
     companion object {
         val DARK_THEME_KEY = booleanPreferencesKey("dark_theme")
         val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
+        val REGISTERED_NAME_KEY = stringPreferencesKey("registered_name")
         val REGISTERED_EMAIL_KEY = stringPreferencesKey("registered_email")
         val REGISTERED_PASSWORD_KEY = stringPreferencesKey("registered_password")
     }
@@ -44,8 +45,9 @@ class UserPreferences(private val context: Context) {
         }
     }
 
-    suspend fun saveRegisteredUser(email: String, password: String) {
+    suspend fun saveRegisteredUser(name: String, email: String, password: String) {
         context.dataStore.edit { preferences ->
+            preferences[REGISTERED_NAME_KEY] = name
             preferences[REGISTERED_EMAIL_KEY] = email
             preferences[REGISTERED_PASSWORD_KEY] = password
         }
@@ -54,5 +56,10 @@ class UserPreferences(private val context: Context) {
     suspend fun getRegisteredUserCredentials(): Pair<String?, String?> {
         val preferences = context.dataStore.data.map { it }.first()
         return preferences[REGISTERED_EMAIL_KEY] to preferences[REGISTERED_PASSWORD_KEY]
+    }
+
+    suspend fun getRegisteredUserName(): String? {
+        val preferences = context.dataStore.data.map { it }.first()
+        return preferences[REGISTERED_NAME_KEY]
     }
 }
