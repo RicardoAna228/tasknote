@@ -800,37 +800,46 @@ fun TaskFormScreen(
 
             // Fecha
             item {
-                OutlinedTextField(
-                    value = dueDate?.let { dateFormatter.format(Date(it)) } ?: "",
-                    onValueChange = { },
-                    label = { Text("Fecha de entrega") },
-                    placeholder = { Text("Seleccionar fecha") },
+                val openDatePicker = {
+                    val calendar = Calendar.getInstance()
+                    dueDate?.let { calendar.timeInMillis = it }
+                    DatePickerDialog(
+                        context,
+                        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                            val selectedDate = Calendar.getInstance().apply {
+                                set(year, month, dayOfMonth, 0, 0, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            dueDate = selectedDate.timeInMillis
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                    ).show()
+                }
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            // Mostrar DatePickerDialog
-                            val calendar = Calendar.getInstance()
-                            dueDate?.let { calendar.time = Date(it) }
-                            DatePickerDialog(
-                                context,
-                                { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-                                    val newDate = Calendar.getInstance().apply {
-                                        set(year, month, dayOfMonth)
-                                    }.time
-                                    dueDate = newDate.time
-                                },
-                                calendar.get(Calendar.YEAR),
-                                calendar.get(Calendar.MONTH),
-                                calendar.get(Calendar.DAY_OF_MONTH)
-                            ).show()
+                        .clickable { openDatePicker() }
+                ) {
+                    OutlinedTextField(
+                        value = dueDate?.let { dateFormatter.format(Date(it)) } ?: "",
+                        onValueChange = { },
+                        label = { Text("Fecha de entrega") },
+                        placeholder = { Text("Seleccionar fecha") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { openDatePicker() }) {
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Seleccionar fecha")
+                            }
                         },
-                    shape = RoundedCornerShape(8.dp),
-                    readOnly = true,
-                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryBlue
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryBlue
+                        )
                     )
-                )
+                }
             }
 
             // Mensaje de error general

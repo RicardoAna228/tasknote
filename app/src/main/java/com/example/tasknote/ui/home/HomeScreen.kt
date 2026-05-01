@@ -51,6 +51,7 @@ fun HomeScreen(
         value = userPreferences.getRegisteredUserName().orEmpty().ifBlank { "Usuario" }
     }
 
+    var searchQuery by remember { mutableStateOf("") }
     val allTasks by viewModel.allTasks.collectAsState()
     val allProjects by viewModel.allProjects.collectAsState()
 
@@ -108,8 +109,12 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
-                    BadgedBox(badge = { if (true) Badge() }) {
+                IconButton(onClick = {
+                    navController.navigate(Screen.Notifications.route) {
+                        launchSingleTop = true
+                    }
+                }) {
+                    BadgedBox(badge = { Badge() }) {
                         Icon(
                             Icons.Default.Notifications,
                             contentDescription = "Notificaciones"
@@ -213,8 +218,8 @@ fun HomeScreen(
             // Barra de búsqueda
             item {
                 com.example.tasknote.ui.components.SearchBar(
-                    query = "",
-                    onQueryChange = { /* ... */ },
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -294,6 +299,11 @@ fun HomeScreen(
             // Lista de tareas recientes (máximo 5)
             val recentTasks = allTasks
                 .filter { !it.completed }
+                .filter { task ->
+                    searchQuery.isBlank() ||
+                            task.title.contains(searchQuery, ignoreCase = true) ||
+                            task.description.contains(searchQuery, ignoreCase = true)
+                }
                 .sortedBy { it.dueDate ?: Long.MAX_VALUE }
                 .take(5)
 
@@ -311,7 +321,7 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No hay tareas pendientes. ¡Crea una nueva!",
+                                text = if (searchQuery.isBlank()) "No hay tareas pendientes. ¡Crea una nueva!" else "No se encontraron tareas para \"$searchQuery\".",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
