@@ -62,4 +62,9 @@ class UserPreferences(private val context: Context) {
         val preferences = context.dataStore.data.map { it }.first()
         return preferences[REGISTERED_NAME_KEY]
     }
+
+    suspend fun getRegisteredUserEmail(): String? {
+        val preferences = context.dataStore.data.map { it }.first()
+        return preferences[REGISTERED_EMAIL_KEY]
+    }
 }

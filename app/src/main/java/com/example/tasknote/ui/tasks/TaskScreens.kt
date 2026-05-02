@@ -61,6 +61,7 @@ fun TaskListScreen(
     viewModel: TaskViewModel
 ) {
     val allTasks by viewModel.allTasks.collectAsState()
+    val allProjects by viewModel.allProjects.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
 
@@ -277,6 +278,7 @@ fun TaskDetailScreen(
     viewModel: TaskViewModel
 ) {
     val allTasks by viewModel.allTasks.collectAsState()
+    val allProjects by viewModel.allProjects.collectAsState()
     val task = allTasks.find { it.id == taskId }
     val subTasks by viewModel.getSubTasksForTask(taskId).collectAsState(initial = emptyList())
     val scope = rememberCoroutineScope()
@@ -398,11 +400,14 @@ fun TaskDetailScreen(
                             label = "Fecha límite",
                             value = task.dueDate?.let { formatDate(it) } ?: "Sin fecha"
                         )
+                        val projectName = task.projectId
+                            ?.let { projectId -> allProjects.firstOrNull { it.id == projectId }?.name }
+                            ?: task.category.name.lowercase()
+                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
                         InfoRow(
                             icon = Icons.Default.Folder,
                             label = "Proyecto",
-                            value = task.category.name.lowercase()
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                            value = projectName
                         )
                         InfoRow(
                             icon = Icons.Default.Flag,
@@ -611,6 +616,7 @@ fun EditTaskScreen(
     viewModel: TaskViewModel
 ) {
     val allTasks by viewModel.allTasks.collectAsState()
+    val allProjects by viewModel.allProjects.collectAsState()
     val task = allTasks.find { it.id == taskId }
 
     if (task == null) {
@@ -645,6 +651,22 @@ fun TaskFormScreen(
     var priority by remember { mutableStateOf(task?.priority ?: Priority.MEDIA) }
     var category by remember { mutableStateOf(task?.category ?: Category.TRABAJO) }
     var dueDate by remember { mutableStateOf(task?.dueDate) }
+    val allProjects by viewModel.allProjects.collectAsState()
+    var selectedProjectId by remember { mutableStateOf(task?.projectId) }
+    var selectedDefaultCategory by remember { mutableStateOf<Category?>(null) }
+    val projectOptions = remember(allProjects) {
+        val categoryDefaults = Category.values().map { category ->
+            ProjectOption(
+                id = null,
+                name = category.name.lowercase().replaceFirstChar { it.titlecase() },
+                category = category
+            )
+        }
+        val customProjects = allProjects.map { project ->
+            ProjectOption(id = project.id, name = project.name, category = project.category)
+        }
+        categoryDefaults + customProjects
+    }
 
     var titleError by remember { mutableStateOf(false) }
     var priorityError by remember { mutableStateOf(false) }
@@ -658,6 +680,11 @@ fun TaskFormScreen(
         showErrorCard = titleError || priorityError
 
         if (!showErrorCard) {
+            val resolvedCategory = when {
+                selectedProjectId != null -> allProjects.firstOrNull { it.id == selectedProjectId }?.category ?: category
+                selectedDefaultCategory != null -> selectedDefaultCategory ?: category
+                else -> category
+            }
             scope.launch {
                 if (task == null) {
                     viewModel.createTask(
@@ -665,7 +692,8 @@ fun TaskFormScreen(
                             title = title,
                             description = description,
                             priority = priority,
-                            category = category,
+                            category = resolvedCategory,
+                            projectId = selectedProjectId,
                             dueDate = dueDate
                         )
                     )
@@ -675,7 +703,8 @@ fun TaskFormScreen(
                             title = title,
                             description = description,
                             priority = priority,
-                            category = category,
+                            category = resolvedCategory,
+                            projectId = selectedProjectId,
                             dueDate = dueDate
                         )
                     )
@@ -696,6 +725,8 @@ fun TaskFormScreen(
                         description = ""
                         priority = Priority.MEDIA
                         category = Category.TRABAJO
+                        selectedProjectId = null
+                        selectedDefaultCategory = null
                         dueDate = null
                     }) {
                         Text("Limpiar", color = PrimaryBlue)
@@ -795,16 +826,49 @@ fun TaskFormScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                var showProjectMenu by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = showProjectMenu,
+                    onExpandedChange = { showProjectMenu = !showProjectMenu }
                 ) {
-                    Category.values().forEach { cat ->
-                        ProjectChip(
-                            category = cat,
-                            selected = category == cat,
-                            onClick = { category = cat }
+                    OutlinedTextField(
+                        value = when {
+                            selectedProjectId != null -> projectOptions.firstOrNull { it.id == selectedProjectId }?.name.orEmpty()
+                            selectedDefaultCategory != null -> selectedDefaultCategory!!.name.lowercase().replaceFirstChar { it.titlecase() }
+                            else -> "Sin proyecto"
+                        },
+                        onValueChange = { },
+                        readOnly = true,
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = showProjectMenu)
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = showProjectMenu,
+                        onDismissRequest = { showProjectMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sin proyecto") },
+                            onClick = {
+                                selectedProjectId = null
+                                selectedDefaultCategory = null
+                                showProjectMenu = false
+                            }
                         )
+                        projectOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.name) },
+                                onClick = {
+                                    selectedProjectId = option.id
+                                    selectedDefaultCategory = if (option.id == null) option.category else null
+                                    showProjectMenu = false
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -906,6 +970,12 @@ fun TaskFormScreen(
         }
     }
 }
+
+private data class ProjectOption(
+    val id: Int?,
+    val name: String,
+    val category: Category?,
+)
 
 // --------------------------------------------
 // Componentes auxiliares del formulario

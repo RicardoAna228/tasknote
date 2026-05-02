@@ -3,6 +3,8 @@ package com.example.tasknote.ui.projects
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -16,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -296,14 +299,11 @@ private fun ProjectCard(
                     .background(categoryColor.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = when (project.category) {
-                        Category.TRABAJO -> "💼"
-                        Category.SALUD -> "💪"
-                        Category.COMPRAS -> "🛒"
-                        Category.PERSONAL -> "👤"
-                    },
-                    fontSize = 20.sp
+                Icon(
+                    imageVector = categoryIcon(project.category),
+                    contentDescription = project.category.name,
+                    tint = categoryColor,
+                    modifier = Modifier.size(22.dp)
                 )
             }
 
@@ -355,18 +355,46 @@ private fun ProjectCard(
             }
 
             // Botón de opciones (eliminar)
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "Opciones",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            var showOptionsMenu by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { showOptionsMenu = true }) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Opciones",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showOptionsMenu,
+                    onDismissRequest = { showOptionsMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Eliminar") },
+                        onClick = {
+                            showOptionsMenu = false
+                            onDelete()
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private fun categoryIcon(category: Category): ImageVector = when (category) {
+    Category.TRABAJO -> Icons.Default.Work
+    Category.SALUD -> Icons.Default.Favorite
+    Category.COMPRAS -> Icons.Default.ShoppingCart
+    Category.PERSONAL -> Icons.Default.Person
+}
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun AddProjectDialog(
     onDismiss: () -> Unit,
@@ -403,9 +431,10 @@ private fun AddProjectDialog(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Category.values().forEach { category ->
                         val isSelected = category == selectedCategory
@@ -420,13 +449,10 @@ private fun AddProjectDialog(
                             onClick = { selectedCategory = category },
                             label = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = when (category) {
-                                            Category.TRABAJO -> "💼"
-                                            Category.SALUD -> "💪"
-                                            Category.COMPRAS -> "🛒"
-                                            Category.PERSONAL -> "👤"
-                                        }
+                                    Icon(
+                                        imageVector = categoryIcon(category),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
@@ -439,7 +465,6 @@ private fun AddProjectDialog(
                                     )
                                 }
                             },
-                            modifier = Modifier.weight(1f),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = categoryColor,
                                 selectedLabelColor = Color.White

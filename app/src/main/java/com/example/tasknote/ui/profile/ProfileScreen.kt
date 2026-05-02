@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import com.example.tasknote.data.local.UserPreferences
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,6 +45,14 @@ fun ProfileScreen(
     val allTasks by viewModel.allTasks.collectAsState()
     val allProjects by viewModel.allProjects.collectAsState()
     val darkTheme by viewModel.darkThemeFlow.collectAsState(initial = false)
+
+    val userPreferences = remember { UserPreferences(context) }
+    val userName by produceState(initialValue = "Usuario") {
+        value = userPreferences.getRegisteredUserName().orEmpty().ifBlank { "Usuario" }
+    }
+    val userEmail by produceState(initialValue = "") {
+        value = userPreferences.getRegisteredUserEmail().orEmpty()
+    }
 
     val completedTasksCount = allTasks.count { it.completed }
     val totalTasks = allTasks.size
@@ -107,7 +116,7 @@ fun ProfileScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            ProfileHeader()
+            ProfileHeader(name = userName, email = userEmail)
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -224,7 +233,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileHeader() {
+private fun ProfileHeader(name: String, email: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
@@ -265,12 +274,12 @@ private fun ProfileHeader() {
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "Usuario",
+            text = name,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "usuario@email.com",
+            text = email.ifBlank { "Sin correo" },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
